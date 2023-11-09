@@ -3,58 +3,12 @@ from suaBibSignal import *
 import peakutils    #alternativas  #from detect_peaks import *   #import pickle
 import numpy as np
 import sounddevice as sd
+import soundfile as sf
 import matplotlib.pyplot as plt
 import time
 from scipy.fftpack import fft, fftshift
 import sys
-
-dic_freq = {'1':[1209, 697], '2':[1336, 697], '3':[1477, 697], 'A':[1633, 697], 
-            '4':[1209, 770], '5':[1336, 770], '6':[1477, 770], 'B':[1633, 770], 
-            '7':[1209, 852], '8':[1336, 852], '9':[1477, 852], 'C':[1633, 852], 
-            'X':[1209, 941], '0':[1336, 941], '#':[1477, 941], 'D':[1633, 941]}
-
-def encontraPossiveis(freqs, delta = 7):
-    possiveis_1 = []
-    possiveis_2 = []
-    freqs_1 = []
-    freqs_2 = []
-    final = []
-    for i in range(len(freqs)):
-        if freqs[i] > 650 and freqs[i] < 1000:
-            freqs_1.append(freqs[i])
-        elif freqs[i] > 1150 and freqs[i] < 1680:
-            freqs_2.append(freqs[i])
-
-    for freq in freqs_1:
-        if 697 - delta < freq < 697 + delta:
-            possiveis_1.extend(['1','2','3','A'])
-        elif 770 - delta < freq < 770 + delta:
-            possiveis_1.extend(['4','5','6','B'])
-        elif 852 - delta < freq < 852 + delta:
-            possiveis_1.extend(['7','8','9','C'])
-        elif 941 - delta < freq < 941 + delta:
-            possiveis_1.extend(['X','0','#','D'])
-
-    for freq in freqs_2:
-        if 1209 - delta < freq < 1209 + delta:
-            possiveis_2.extend(['1','4','7','X'])
-        elif 1336 - delta < freq < 1336 + delta:
-            possiveis_2.extend(['2','5','8','0'])
-        elif 1477 - delta < freq < 1477 + delta:
-            possiveis_2.extend(['3','6','9','#'])
-        elif 1633 - delta < freq < 1633 + delta:
-            possiveis_2.extend(['A','B','C','D'])
-            
-    for possivel in possiveis_1:
-        if possivel in possiveis_2:
-            final.append(possivel)
-
-    print(possiveis_1)
-    print(possiveis_2)
-
-    return final
     
-
 #funcao para transformas intensidade acustica em dB, caso queira usar
 def todB(s):
     sdB = 10*np.log10(s)
@@ -81,21 +35,24 @@ def main():
     # os seguintes parametros devem ser setados:
     sd.default.samplerate = 44100 #taxa de amostragem
     fs = 44100
+    fc = 14000
+    C = 1
+    c = C*np.sin(2*np.pi*fc)
     sd.default.channels = 1 #numCanais # o numero de canais, tipicamente são 2. Placas com dois canais. Se ocorrer problemas pode tentar com 1. No caso de 2 canais, ao gravar um audio, terá duas listas
-    duration = 2 # #tempo em segundos que ira aquisitar o sinal acustico captado pelo mic
+    duration = 5 # #tempo em segundos que ira aquisitar o sinal acustico captado pelo mic
     
     #calcule o numero de amostras "numAmostras" que serao feitas (numero de aquisicoes) durante a gracação. Para esse cálculo você deverá utilizar a taxa de amostragem e o tempo de gravação
     numAmostras = sd.default.samplerate * duration
     #faca um print na tela dizendo que a captacao comecará em n segundos. e entao 
     #use um time.sleep para a espera
     print("A gravação começará em")
-    # time.sleep(1)
-    # print("3")
-    # time.sleep(1)
-    # print("2")
-    # time.sleep(1)
-    # print("1")
-    # time.sleep(1)
+    time.sleep(1)
+    print("3")
+    time.sleep(1)
+    print("2")
+    time.sleep(1)
+    print("1")
+    time.sleep(1)
    
     #Ao seguir, faca um print informando que a gravacao foi inicializada
 
@@ -105,6 +62,9 @@ def main():
     audio = sd.rec(int(numAmostras))
     sd.wait()
     print("...     ACABOU")
+
+    filename = "output.wav"
+    sf.write(filename, audio, fs)
 
 
     #analise sua variavel "audio". pode ser um vetor com 1 ou 2 colunas, lista, isso dependerá so seu sistema, drivers etc...
@@ -160,8 +120,6 @@ def main():
     #Se acertou, parabens! Voce construiu um sistema DTMF
 
     #Você pode tentar também identificar a tecla de um telefone real! Basta gravar o som emitido pelo seu celular ao pressionar uma tecla. 
-
-    print(encontraPossiveis(xf[index]))
       
     ## Exiba gráficos do fourier do som gravados 
     plt.show()
