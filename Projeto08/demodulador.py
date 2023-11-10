@@ -74,20 +74,34 @@ def main():
     xf, yf = calcFFT(yFiltrado, samplerate)
     xfCerto, yfCerto = calcFFT(yFiltradoCerto, samplerate)
 
-    play = True
+    maxAudio = abs(max(yFiltrado))
+    minAudio = abs(min(yFiltrado))
+
+    if minAudio > maxAudio:
+        yAudioNormalizado = yFiltrado/minAudio
+    else:
+        yAudioNormalizado = yFiltrado/maxAudio
+
+    yAudioNormalizado = yAudioNormalizado*5
+
+    play = False
 
     if play:
-        print("Emitindo o som demodulado")
-        sd.play(yDemodulado, samplerate)
-        sd.wait()
+        # print("Emitindo o som demodulado")
+        # sd.play(yDemodulado, samplerate)
+        # sd.wait()
 
         print("Emitindo o som filtrado")
         sd.play(yFiltrado, samplerate)
         sd.wait()
 
-        print("Emitindo o som modulado certo")
-        sd.play(yDemoduladoCerto, samplerate)
+        print("Emitindo o som normalizado")
+        sd.play(yAudioNormalizado, samplerate)
         sd.wait()
+
+        # print("Emitindo o som modulado certo")
+        # sd.play(yDemoduladoCerto, samplerate)
+        # sd.wait()
         
         print("Emitindo o som filtrado certo")
         sd.play(yFiltradoCerto, samplerate)
@@ -96,27 +110,30 @@ def main():
     show = True
 
     if show:
+        plt.figure('demodulado')
+        plt.plot(t, yDemodulado)
+
         plt.figure("Fourier")
         plt.title("Fourier")
         plt.plot(xf, np.abs(yf))
+        xlim(0,20000)
 
         plt.figure("Fourier certo")
         plt.title("Fourier certo")
         plt.plot(xfCerto, np.abs(yfCerto))
+        xlim(0,20000)
 
         plt.figure("Fourier modulado")
         plt.title("Fourier modulado")
         plt.plot(xfModulado, np.abs(yfModulado))
+        xlim(0,20000)
 
         plt.figure("Fourier modulado certo")
         plt.title("Fourier modulado certo")
         plt.plot(xfModuladoCerto, np.abs(yfModuladoCerto))
+        xlim(0,20000)
 
-    
-
-        
-    
-    plt.show()
+        plt.show()
 
 if __name__ == "__main__":
     main()

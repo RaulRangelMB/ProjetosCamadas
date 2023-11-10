@@ -63,7 +63,7 @@ def main():
     sd.wait()
     print("...     ACABOU")
 
-    filename = "output.wav"
+    filename = "outputteste.wav"
     sf.write(filename, audio, fs)
 
 
