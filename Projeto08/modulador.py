@@ -20,11 +20,11 @@ def signal_handler(signal, frame):
         print('You pressed Ctrl+C!')
         sys.exit(0)
 
-def calcFFT(signal, fs):
+def calcFFT(signal, samplerate):
     # https://docs.scipy.org/doc/scipy/reference/tutorial/fftpack.html
-    #y  = np.append(signal, np.zeros(len(signal)*fs))
+    #y  = np.append(signal, np.zeros(len(signal)*samplerate))
     N  = len(signal)
-    T  = 1/fs
+    T  = 1/samplerate
     xf = np.linspace(-1.0/(2.0*T), 1.0/(2.0*T), N)
     yf = fft(signal)
     return(xf, fftshift(yf))
@@ -38,17 +38,16 @@ def main():
     print("Inicializando")
     
     duracao = 5 #tempo do som em segundos
-    fs = 44100 # taxa de amostragem
 
     yAudio, samplerate = sf.read('output.wav')
 
-    maxAudio = max(yAudio)
-    minAudio = min(yAudio)
+    maxAudio = abs(max(yAudio))
+    minAudio = abs(min(yAudio))
 
-    if abs(minAudio) > abs(maxAudio):
-        yAudioNormalizado = yAudio/abs(minAudio)
+    if minAudio > maxAudio:
+        yAudioNormalizado = yAudio/minAudio
     else:
-        yAudioNormalizado = yAudio/abs(maxAudio)
+        yAudioNormalizado = yAudio/maxAudio
 
     yFiltrado = [yAudioNormalizado[0], yAudioNormalizado[1]]
     a = 0.1121
@@ -68,56 +67,61 @@ def main():
 
     yFiltradoCerto = lfilter(taps, 1.0, yAudioNormalizado)
 
-    t = np.linspace(0, duracao, duracao*fs)
+    t = np.linspace(0, duracao, duracao*samplerate)
 
     yModulado = [(yFiltrado[i])*cc(t[i]) for i in range(len(yFiltrado))]
-    
-    # plt.figure("wves")
-    
-    # plt.plot(t, s2)
+    yModuladoCerto = [(yFiltradoCerto[i])*cc(t[i]) for i in range(len(yFiltrado))]
 
     play = False
 
     if play:
         print("Emitindo o som")
-        sd.play(yAudio, fs)
+        sd.play(yAudio, samplerate)
         sd.wait()
 
         print("Emitindo o som filtrado")
-        sd.play(yFiltrado, fs)
+        sd.play(yFiltrado, samplerate)
         sd.wait()
 
         print("Emitindo o som modulado")
-        sd.play(yModulado, fs)
+        sd.play(yModulado, samplerate)
         sd.wait()
 
     filename = "modulado.wav"
-    sf.write(filename, yModulado, fs)
+    sf.write(filename, yModulado, samplerate)
 
-    xfAudioNormalizado, yfAudioNormalizado = calcFFT(yAudioNormalizado, fs)
-    xfAudioFiltrado, yfAudioFiltrado = calcFFT(yFiltrado, fs)
+    filename = "moduladocerto.wav"
+    sf.write(filename, yModuladoCerto, samplerate)
 
-    # Exibe gráficos
-    plt.figure('audio')
-    plt.plot(t, yAudio)
-    plt.figure('filtrado')
-    plt.plot(t, yFiltrado)
-    plt.figure('filtrado certo')
-    plt.plot(t, yFiltradoCerto)
-    plt.figure('normalizado')
-    plt.plot(t, yAudioNormalizado)
-    plt.figure('modulado')
-    plt.plot(t, yModulado)
-    plt.figure('fourier')
-    plt.plot(xfAudioNormalizado, np.abs(yfAudioNormalizado))
-    plt.figure('fourier filtrado')
-    plt.plot(xfAudioFiltrado, np.abs(yfAudioFiltrado))
+    xfAudioNormalizado, yfAudioNormalizado = calcFFT(yAudioNormalizado, samplerate)
+    xfAudioFiltrado, yfAudioFiltrado = calcFFT(yFiltrado, samplerate)
+
+    show = False
+
+    if show:
+        # Exibe gráficos
+        plt.figure('audio')
+        plt.plot(t, yAudio)
+        plt.figure('filtrado')
+        plt.plot(t, yFiltrado)
+        plt.figure('filtrado certo')
+        plt.plot(t, yFiltradoCerto)
+        plt.figure('normalizado')
+        plt.plot(t, yAudioNormalizado)
+        plt.figure('modulado')
+        plt.plot(t, yModulado)
+        plt.figure('modulado certo')
+        plt.plot(t, yModuladoCerto)
+        plt.figure('fourier')
+        plt.plot(xfAudioNormalizado, np.abs(yfAudioNormalizado))
+        plt.figure('fourier filtrado')
+        plt.plot(xfAudioFiltrado, np.abs(yfAudioFiltrado))
     
     # plt.title("Ondas somadas no tempo")
     # plt.xlabel("tempo (s)")
     # plt.xlim([0, 0.01])
     
-    # signalMeu().plotFFT(sinal, fs)
+    # signalMeu().plotFFT(sinal, samplerate)
     plt.show()
 
 if __name__ == "__main__":
